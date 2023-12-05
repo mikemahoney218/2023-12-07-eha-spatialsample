@@ -249,6 +249,22 @@ vfold_rset |>
   head()
 ```
 
+## rsample and friends
+
+```{r}
+vfold_rset$splits |> 
+  lapply(analysis) |> 
+  lapply(lm, formula = canopy_area_2019 ~ land_area * mean_temp) |> 
+  mapply(
+    FUN = \(mod, rsplit) {
+      assessment <- assessment(rsplit)
+      yardstick::rmse_vec(assessment[["canopy_area_2019"]], predict(mod, assessment))
+    },
+    mod = _,
+    rsplit = vfold_rset$splits
+  ) |> 
+  mean()
+```
 
 ## rsample and friends
 
@@ -398,6 +414,25 @@ walk(spatial_clustering_cv(boston_canopy, v = 5, buffer = 1500)$splits, function
 :::{.notes}
 And so rather than training and testing with random data, we're testing on data that's geographically separated from our training data, and so hopefully less related to the testing data.
 :::
+
+---
+
+```{r}
+boston_clusters <- spatial_clustering_cv(boston_canopy)
+boston_clusters$splits |> 
+  lapply(analysis) |> 
+  lapply(lm, formula = canopy_area_2019 ~ land_area * mean_temp) |> 
+  mapply(
+    FUN = \(mod, rsplit) {
+      assessment <- assessment(rsplit)
+      yardstick::rmse_vec(assessment[["canopy_area_2019"]], predict(mod, assessment))
+    },
+    mod = _,
+    rsplit = boston_clusters$splits
+  ) |> 
+  mean()
+```
+
 
 ## tidymodels integration
 

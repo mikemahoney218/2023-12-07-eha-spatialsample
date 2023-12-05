@@ -589,11 +589,31 @@
 <section id="rsample-and-friends-3" class="slide level2 center">
 <h2>rsample and friends</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a><span class="fu">workflow</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb11-2"><a href="#cb11-2"></a>  <span class="fu">add_model</span>(<span class="fu">linear_reg</span>()) <span class="sc">|&gt;</span> </span>
-<span id="cb11-3"><a href="#cb11-3"></a>  <span class="fu">add_formula</span>(canopy_area_2019 <span class="sc">~</span> land_area <span class="sc">*</span> mean_temp) <span class="sc">|&gt;</span> </span>
-<span id="cb11-4"><a href="#cb11-4"></a>  <span class="fu">fit_resamples</span>(<span class="fu">vfold_cv</span>(spatialsample<span class="sc">::</span>boston_canopy)) <span class="sc">|&gt;</span> </span>
-<span id="cb11-5"><a href="#cb11-5"></a>  <span class="fu">collect_metrics</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a>vfold_rset<span class="sc">$</span>splits <span class="sc">|&gt;</span> </span>
+<span id="cb11-2"><a href="#cb11-2"></a>  <span class="fu">lapply</span>(analysis) <span class="sc">|&gt;</span> </span>
+<span id="cb11-3"><a href="#cb11-3"></a>  <span class="fu">lapply</span>(lm, <span class="at">formula =</span> canopy_area_2019 <span class="sc">~</span> land_area <span class="sc">*</span> mean_temp) <span class="sc">|&gt;</span> </span>
+<span id="cb11-4"><a href="#cb11-4"></a>  <span class="fu">mapply</span>(</span>
+<span id="cb11-5"><a href="#cb11-5"></a>    <span class="at">FUN =</span> \(mod, rsplit) {</span>
+<span id="cb11-6"><a href="#cb11-6"></a>      assessment <span class="ot">&lt;-</span> <span class="fu">assessment</span>(rsplit)</span>
+<span id="cb11-7"><a href="#cb11-7"></a>      yardstick<span class="sc">::</span><span class="fu">rmse_vec</span>(assessment[[<span class="st">"canopy_area_2019"</span>]], <span class="fu">predict</span>(mod, assessment))</span>
+<span id="cb11-8"><a href="#cb11-8"></a>    },</span>
+<span id="cb11-9"><a href="#cb11-9"></a>    <span class="at">mod =</span> _,</span>
+<span id="cb11-10"><a href="#cb11-10"></a>    <span class="at">rsplit =</span> vfold_rset<span class="sc">$</span>splits</span>
+<span id="cb11-11"><a href="#cb11-11"></a>  ) <span class="sc">|&gt;</span> </span>
+<span id="cb11-12"><a href="#cb11-12"></a>  <span class="fu">mean</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; [1] 375792</code></pre>
+</div>
+</div>
+</section>
+<section id="rsample-and-friends-4" class="slide level2 center">
+<h2>rsample and friends</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a><span class="fu">workflow</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb13-2"><a href="#cb13-2"></a>  <span class="fu">add_model</span>(<span class="fu">linear_reg</span>()) <span class="sc">|&gt;</span> </span>
+<span id="cb13-3"><a href="#cb13-3"></a>  <span class="fu">add_formula</span>(canopy_area_2019 <span class="sc">~</span> land_area <span class="sc">*</span> mean_temp) <span class="sc">|&gt;</span> </span>
+<span id="cb13-4"><a href="#cb13-4"></a>  <span class="fu">fit_resamples</span>(<span class="fu">vfold_cv</span>(spatialsample<span class="sc">::</span>boston_canopy)) <span class="sc">|&gt;</span> </span>
+<span id="cb13-5"><a href="#cb13-5"></a>  <span class="fu">collect_metrics</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>#&gt; # A tibble: 2 × 6
 #&gt;   .metric .estimator       mean     n    std_err .config             
@@ -610,11 +630,11 @@
 <section id="what-does-new-data-mean" class="slide level2 center">
 <h2>What does “new data” mean?</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a><span class="fu">ggplot</span>(spatialsample<span class="sc">::</span>boston_canopy, <span class="fu">aes</span>(<span class="at">fill =</span> canopy_area_2019)) <span class="sc">+</span> <span class="fu">geom_sf</span>() <span class="sc">+</span> </span>
-<span id="cb13-2"><a href="#cb13-2"></a>  <span class="fu">scale_fill_distiller</span>(<span class="at">name =</span> <span class="st">"Canopy area (2019)"</span>, <span class="at">palette =</span> <span class="st">"YlGn"</span>, <span class="at">direction =</span> <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a><span class="fu">ggplot</span>(spatialsample<span class="sc">::</span>boston_canopy, <span class="fu">aes</span>(<span class="at">fill =</span> canopy_area_2019)) <span class="sc">+</span> <span class="fu">geom_sf</span>() <span class="sc">+</span> </span>
+<span id="cb15-2"><a href="#cb15-2"></a>  <span class="fu">scale_fill_distiller</span>(<span class="at">name =</span> <span class="st">"Canopy area (2019)"</span>, <span class="at">palette =</span> <span class="st">"YlGn"</span>, <span class="at">direction =</span> <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 </div>
-<img data-src="slides_files/figure-revealjs/unnamed-chunk-7-1.svg" width="960" class="r-stretch"><aside class="notes">
+<img data-src="slides_files/figure-revealjs/unnamed-chunk-8-1.svg" width="960" class="r-stretch"><aside class="notes">
 <p>But a challenge is that most rsample functions assume you can assign your data to folds at random, and still get independent training and test sets. That’s true for a lot of data, but starts to break down once your data is no longer entirely independent – once you start getting autocorrelation between your observations. And for spatial data, you almost always have autocorrelation. For instance, this is a map of tree cover in Boston, and as you can kinda guess tree cover isn’t randomly distributed across the city – down in Stony Brook Park there’s a ton of tree cover, up here in Seaport there’s a bit less. The tree cover for any one of these hexagons is pretty tightly linked to how much tree cover its neighbors have.</p>
 <style type="text/css">
         span.MJX_Assistive_MathML {
@@ -631,7 +651,7 @@
 <section id="are-these-folds-really-unrelated" class="slide level2 center">
 <h2>Are these folds really unrelated?</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a>rsample<span class="sc">::</span><span class="fu">vfold_cv</span>(spatialsample<span class="sc">::</span>boston_canopy, <span class="at">v =</span> <span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1"></a>rsample<span class="sc">::</span><span class="fu">vfold_cv</span>(spatialsample<span class="sc">::</span>boston_canopy, <span class="at">v =</span> <span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 
 <img data-src="slides_files/figure-revealjs/first_vfold-1.svg" width="960" class="r-stretch"><aside class="notes">
@@ -668,9 +688,9 @@
 <section id="spatial-clustering" class="slide level2 center">
 <h2>Spatial clustering</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a><span class="fu">library</span>(spatialsample)</span>
-<span id="cb15-2"><a href="#cb15-2"></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
-<span id="cb15-3"><a href="#cb15-3"></a><span class="fu">spatial_clustering_cv</span>(boston_canopy, <span class="at">v =</span> <span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1"></a><span class="fu">library</span>(spatialsample)</span>
+<span id="cb17-2"><a href="#cb17-2"></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
+<span id="cb17-3"><a href="#cb17-3"></a><span class="fu">spatial_clustering_cv</span>(boston_canopy, <span class="at">v =</span> <span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 
 <img data-src="slides_files/figure-revealjs/boston_clusters-1.svg" width="960" class="r-stretch"><aside class="notes">
@@ -690,8 +710,8 @@
 <section id="spatial-clustering-1" class="slide level2 center">
 <h2>Spatial clustering</h2>
 <div class="cell" data-animation.hook="gifski">
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1"></a><span class="fu">library</span>(purrr)</span>
-<span id="cb16-2"><a href="#cb16-2"></a><span class="fu">walk</span>(<span class="fu">spatial_clustering_cv</span>(boston_canopy, <span class="at">v =</span> <span class="dv">5</span>)<span class="sc">$</span>splits, <span class="cf">function</span>(x) <span class="fu">print</span>(<span class="fu">autoplot</span>(x)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1"></a><span class="fu">library</span>(purrr)</span>
+<span id="cb18-2"><a href="#cb18-2"></a><span class="fu">walk</span>(<span class="fu">spatial_clustering_cv</span>(boston_canopy, <span class="at">v =</span> <span class="dv">5</span>)<span class="sc">$</span>splits, <span class="cf">function</span>(x) <span class="fu">print</span>(<span class="fu">autoplot</span>(x)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 </div>
 <img data-src="slides_files/figure-revealjs/boston_clusters_gif-.gif" width="960" class="r-stretch"><aside class="notes">
@@ -711,7 +731,7 @@
 <section id="spatial-blocking" class="slide level2 center">
 <h2>Spatial blocking</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1"></a><span class="fu">spatial_block_cv</span>(boston_canopy, <span class="at">v =</span> <span class="dv">5</span>, <span class="at">n =</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">10</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1"></a><span class="fu">spatial_block_cv</span>(boston_canopy, <span class="at">v =</span> <span class="dv">5</span>, <span class="at">n =</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">10</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 
 <img data-src="slides_files/figure-revealjs/boston_blocks-1.svg" width="960" class="r-stretch"><aside class="notes">
@@ -731,24 +751,24 @@
 <section id="spatial-blocking-1" class="slide level2 center">
 <h2>Spatial blocking</h2>
 <div class="cell" data-animation.hook="gifski">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1"></a><span class="fu">walk</span>(<span class="fu">spatial_block_cv</span>(boston_canopy, <span class="at">v =</span> <span class="dv">5</span>, <span class="at">n =</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">10</span>))<span class="sc">$</span>splits,</span>
-<span id="cb18-2"><a href="#cb18-2"></a>     <span class="cf">function</span>(x) <span class="fu">print</span>(<span class="fu">autoplot</span>(x)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1"></a><span class="fu">walk</span>(<span class="fu">spatial_block_cv</span>(boston_canopy, <span class="at">v =</span> <span class="dv">5</span>, <span class="at">n =</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">10</span>))<span class="sc">$</span>splits,</span>
+<span id="cb20-2"><a href="#cb20-2"></a>     <span class="cf">function</span>(x) <span class="fu">print</span>(<span class="fu">autoplot</span>(x)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 
 </div>
 <img data-src="slides_files/figure-revealjs/boston_block_gif-.gif" width="960" class="r-stretch"></section>
 <section id="spatial-blocking-2" class="slide level2 center">
 <h2>Spatial blocking</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1"></a><span class="fu">spatial_block_cv</span>(boston_canopy, <span class="at">v =</span> <span class="dv">5</span>, <span class="at">n =</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">10</span>), </span>
-<span id="cb19-2"><a href="#cb19-2"></a>                 <span class="at">method =</span> <span class="st">"continuous"</span>, <span class="at">relevant_only =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1"></a><span class="fu">spatial_block_cv</span>(boston_canopy, <span class="at">v =</span> <span class="dv">5</span>, <span class="at">n =</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">10</span>), </span>
+<span id="cb21-2"><a href="#cb21-2"></a>                 <span class="at">method =</span> <span class="st">"continuous"</span>, <span class="at">relevant_only =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 
 <img data-src="slides_files/figure-revealjs/boston_blocks_continuous-1.svg" width="960" class="r-stretch"></section>
 <section id="spatial-lodo" class="slide level2 center">
 <h2>Spatial LODO</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1"></a>folds <span class="ot">&lt;-</span> <span class="fu">spatial_buffer_vfold_cv</span>(boston_canopy, <span class="at">v =</span> <span class="cn">Inf</span>, <span class="at">radius =</span> <span class="dv">1500</span>, <span class="at">buffer =</span> <span class="dv">1500</span>)</span>
-<span id="cb20-2"><a href="#cb20-2"></a><span class="fu">walk</span>(folds<span class="sc">$</span>splits, <span class="cf">function</span>(x) <span class="fu">print</span>(<span class="fu">autoplot</span>(x)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1"></a>folds <span class="ot">&lt;-</span> <span class="fu">spatial_buffer_vfold_cv</span>(boston_canopy, <span class="at">v =</span> <span class="cn">Inf</span>, <span class="at">radius =</span> <span class="dv">1500</span>, <span class="at">buffer =</span> <span class="dv">1500</span>)</span>
+<span id="cb22-2"><a href="#cb22-2"></a><span class="fu">walk</span>(folds<span class="sc">$</span>splits, <span class="cf">function</span>(x) <span class="fu">print</span>(<span class="fu">autoplot</span>(x)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 
 <img data-src="slides_files/figure-revealjs/boston_vfold_all_gif-.gif" width="960" class="r-stretch"><aside class="notes">
@@ -768,7 +788,7 @@
 <section id="buffering" class="slide level2 center">
 <h2>Buffering</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1"></a><span class="fu">spatial_clustering_cv</span>(boston_canopy, <span class="at">v =</span> <span class="dv">5</span>, <span class="at">buffer =</span> <span class="dv">1500</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1"></a><span class="fu">spatial_clustering_cv</span>(boston_canopy, <span class="at">v =</span> <span class="dv">5</span>, <span class="at">buffer =</span> <span class="dv">1500</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 
 <img data-src="slides_files/figure-revealjs/boston_clusters_buffer_gif-.gif" width="960" class="r-stretch"><aside class="notes">
@@ -785,35 +805,56 @@
           display:block!important;
       }</style></aside>
 </section>
+<section class="slide level2 center">
+
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1"></a>boston_clusters <span class="ot">&lt;-</span> <span class="fu">spatial_clustering_cv</span>(boston_canopy)</span>
+<span id="cb24-2"><a href="#cb24-2"></a>boston_clusters<span class="sc">$</span>splits <span class="sc">|&gt;</span> </span>
+<span id="cb24-3"><a href="#cb24-3"></a>  <span class="fu">lapply</span>(analysis) <span class="sc">|&gt;</span> </span>
+<span id="cb24-4"><a href="#cb24-4"></a>  <span class="fu">lapply</span>(lm, <span class="at">formula =</span> canopy_area_2019 <span class="sc">~</span> land_area <span class="sc">*</span> mean_temp) <span class="sc">|&gt;</span> </span>
+<span id="cb24-5"><a href="#cb24-5"></a>  <span class="fu">mapply</span>(</span>
+<span id="cb24-6"><a href="#cb24-6"></a>    <span class="at">FUN =</span> \(mod, rsplit) {</span>
+<span id="cb24-7"><a href="#cb24-7"></a>      assessment <span class="ot">&lt;-</span> <span class="fu">assessment</span>(rsplit)</span>
+<span id="cb24-8"><a href="#cb24-8"></a>      yardstick<span class="sc">::</span><span class="fu">rmse_vec</span>(assessment[[<span class="st">"canopy_area_2019"</span>]], <span class="fu">predict</span>(mod, assessment))</span>
+<span id="cb24-9"><a href="#cb24-9"></a>    },</span>
+<span id="cb24-10"><a href="#cb24-10"></a>    <span class="at">mod =</span> _,</span>
+<span id="cb24-11"><a href="#cb24-11"></a>    <span class="at">rsplit =</span> boston_clusters<span class="sc">$</span>splits</span>
+<span id="cb24-12"><a href="#cb24-12"></a>  ) <span class="sc">|&gt;</span> </span>
+<span id="cb24-13"><a href="#cb24-13"></a>  <span class="fu">mean</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>#&gt; [1] 949744.3</code></pre>
+</div>
+</div>
+</section>
 <section id="tidymodels-integration" class="slide level2 center">
 <h2>tidymodels integration</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1"></a><span class="fu">workflow</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb22-2"><a href="#cb22-2"></a>  <span class="fu">add_model</span>(<span class="fu">linear_reg</span>()) <span class="sc">|&gt;</span> </span>
-<span id="cb22-3"><a href="#cb22-3"></a>  <span class="fu">add_formula</span>(canopy_area_2019 <span class="sc">~</span> land_area <span class="sc">*</span> mean_temp) <span class="sc">|&gt;</span> </span>
-<span id="cb22-4"><a href="#cb22-4"></a>  <span class="fu">fit_resamples</span>(<span class="fu">vfold_cv</span>(spatialsample<span class="sc">::</span>boston_canopy)) <span class="sc">|&gt;</span> </span>
-<span id="cb22-5"><a href="#cb22-5"></a>  <span class="fu">collect_metrics</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1"></a><span class="fu">workflow</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb26-2"><a href="#cb26-2"></a>  <span class="fu">add_model</span>(<span class="fu">linear_reg</span>()) <span class="sc">|&gt;</span> </span>
+<span id="cb26-3"><a href="#cb26-3"></a>  <span class="fu">add_formula</span>(canopy_area_2019 <span class="sc">~</span> land_area <span class="sc">*</span> mean_temp) <span class="sc">|&gt;</span> </span>
+<span id="cb26-4"><a href="#cb26-4"></a>  <span class="fu">fit_resamples</span>(<span class="fu">vfold_cv</span>(spatialsample<span class="sc">::</span>boston_canopy)) <span class="sc">|&gt;</span> </span>
+<span id="cb26-5"><a href="#cb26-5"></a>  <span class="fu">collect_metrics</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>#&gt; # A tibble: 2 × 6
 #&gt;   .metric .estimator       mean     n    std_err .config             
 #&gt;   &lt;chr&gt;   &lt;chr&gt;           &lt;dbl&gt; &lt;int&gt;      &lt;dbl&gt; &lt;chr&gt;               
-#&gt; 1 rmse    standard   378993.       10 18001.     Preprocessor1_Model1
-#&gt; 2 rsq     standard        0.354    10     0.0171 Preprocessor1_Model1</code></pre>
+#&gt; 1 rmse    standard   377195.       10 21949.     Preprocessor1_Model1
+#&gt; 2 rsq     standard        0.359    10     0.0239 Preprocessor1_Model1</code></pre>
 </div>
 </div>
 <div class="fragment">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1"></a><span class="fu">workflow</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb24-2"><a href="#cb24-2"></a>  <span class="fu">add_model</span>(<span class="fu">linear_reg</span>()) <span class="sc">|&gt;</span> </span>
-<span id="cb24-3"><a href="#cb24-3"></a>  <span class="fu">add_formula</span>(canopy_area_2019 <span class="sc">~</span> land_area <span class="sc">*</span> mean_temp) <span class="sc">|&gt;</span> </span>
-<span id="cb24-4"><a href="#cb24-4"></a>  <span class="fu">fit_resamples</span>(<span class="fu">spatial_clustering_cv</span>(spatialsample<span class="sc">::</span>boston_canopy)) <span class="sc">|&gt;</span> </span>
-<span id="cb24-5"><a href="#cb24-5"></a>  <span class="fu">collect_metrics</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1"></a><span class="fu">workflow</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb28-2"><a href="#cb28-2"></a>  <span class="fu">add_model</span>(<span class="fu">linear_reg</span>()) <span class="sc">|&gt;</span> </span>
+<span id="cb28-3"><a href="#cb28-3"></a>  <span class="fu">add_formula</span>(canopy_area_2019 <span class="sc">~</span> land_area <span class="sc">*</span> mean_temp) <span class="sc">|&gt;</span> </span>
+<span id="cb28-4"><a href="#cb28-4"></a>  <span class="fu">fit_resamples</span>(<span class="fu">spatial_clustering_cv</span>(spatialsample<span class="sc">::</span>boston_canopy)) <span class="sc">|&gt;</span> </span>
+<span id="cb28-5"><a href="#cb28-5"></a>  <span class="fu">collect_metrics</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>#&gt; # A tibble: 2 × 6
 #&gt;   .metric .estimator       mean     n     std_err .config             
 #&gt;   &lt;chr&gt;   &lt;chr&gt;           &lt;dbl&gt; &lt;int&gt;       &lt;dbl&gt; &lt;chr&gt;               
-#&gt; 1 rmse    standard   934397.       10 549480.     Preprocessor1_Model1
-#&gt; 2 rsq     standard        0.348    10      0.0468 Preprocessor1_Model1</code></pre>
+#&gt; 1 rmse    standard   887760.       10 499093.     Preprocessor1_Model1
+#&gt; 2 rsq     standard        0.327    10      0.0557 Preprocessor1_Model1</code></pre>
 </div>
 </div>
 </div>
